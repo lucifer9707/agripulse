@@ -283,3 +283,115 @@
         height: 200px;
     }
 }
+
+/* Add these new styles to your existing css/styles.css */
+
+/* Auth Tabs */
+.auth-tabs {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 2rem;
+    background: rgba(28, 49, 34, 0.6);
+    padding: 0.5rem;
+    border-radius: 3rem;
+    border: 1px solid #2e5535;
+}
+
+.tab-btn {
+    flex: 1;
+    padding: 0.8rem 1rem;
+    background: transparent;
+    border: none;
+    border-radius: 2rem;
+    color: #9cb89c;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.tab-btn i {
+    font-size: 1rem;
+}
+
+.tab-btn.active {
+    background: #2f4f39;
+    color: #eef4e6;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+}
+
+.tab-btn:hover:not(.active) {
+    color: #bcddb6;
+    background: rgba(47, 79, 57, 0.3);
+}
+
+/* Terms checkbox */
+.terms-checkbox {
+    margin: 1.5rem 0;
+}
+
+.terms-checkbox .checkbox a {
+    color: #8bcc8e;
+    text-decoration: none;
+}
+
+.terms-checkbox .checkbox a:hover {
+    text-decoration: underline;
+}
+
+/* Auth success message */
+.auth-success {
+    margin-top: 1rem;
+    padding: 0.8rem;
+    background: rgba(60, 140, 80, 0.2);
+    border: 1px solid #4caf50;
+    border-radius: 1rem;
+    color: #a8e6b0;
+    text-align: center;
+    font-size: 0.9rem;
+}
+
+.auth-success i {
+    margin-right: 0.5rem;
+    color: #4caf50;
+}
+
+/* Rename login-error to auth-error for reuse */
+.auth-error {
+    margin-top: 1rem;
+    padding: 0.8rem;
+    background: rgba(180, 60, 60, 0.2);
+    border: 1px solid #b85c5c;
+    border-radius: 1rem;
+    color: #ffb0b0;
+    text-align: center;
+    font-size: 0.9rem;
+}
+
+.auth-error i {
+    margin-right: 0.5rem;
+}
+
+/* Update existing login-error class to use auth-error */
+.login-error {
+    /* This will be replaced by auth-error */
+}
+
+/* Password strength indicator (optional) */
+.password-strength {
+    margin-top: 0.5rem;
+    height: 4px;
+    background: #1c3122;
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+.strength-bar {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, #ff6b6b, #f5b342, #4caf50);
+    transition: width 0.3s;
+}

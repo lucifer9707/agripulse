@@ -5,15 +5,33 @@ const app = createApp({
     setup() {
         // Authentication state
         const isAuthenticated = ref(false);
-        const currentUser = ref('');
+        const currentUser = ref({});
         const isLoggingIn = ref(false);
+        const isRegistering = ref(false);
         const loginError = ref('');
+        const registerError = ref('');
+        const registerSuccess = ref('');
+        
+        // Auth mode: 'login' or 'register'
+        const authMode = ref('login');
         
         const loginForm = ref({
             username: '',
             password: '',
             remember: false
         });
+
+        const registerForm = ref({
+            fullName: '',
+            username: '',
+            email: '',
+            password: '',
+            confirmPassword: '',
+            agreeTerms: false
+        });
+
+        // Store registered users (in memory for demo)
+        const users = ref([]);
 
         // Main app state
         const selectedCrop = ref('');
@@ -28,27 +46,130 @@ const app = createApp({
             
             // Simulate API call with setTimeout
             setTimeout(() => {
-                // Demo credentials: farmer / agripulse2026
-                if (loginForm.value.username === 'farmer' && loginForm.value.password === 'agripulse2026') {
+                // Check against registered users OR demo credentials
+                const user = users.value.find(u => u.username === loginForm.value.username);
+                
+                if (user && user.password === loginForm.value.password) {
+                    // Registered user found
                     isAuthenticated.value = true;
-                    currentUser.value = loginForm.value.username;
+                    currentUser.value = user;
                     
-                    // Save to sessionStorage if remember me is checked
                     if (loginForm.value.remember) {
                         sessionStorage.setItem('agripulse_auth', 'true');
-                        sessionStorage.setItem('agripulse_user', loginForm.value.username);
+                        sessionStorage.setItem('agripulse_user', JSON.stringify(user));
+                    }
+                } 
+                // Demo credentials
+                else if (loginForm.value.username === 'farmer' && loginForm.value.password === 'agripulse2026') {
+                    const demoUser = {
+                        fullName: 'Demo Farmer',
+                        username: 'farmer',
+                        email: 'farmer@agripulse.demo'
+                    };
+                    isAuthenticated.value = true;
+                    currentUser.value = demoUser;
+                    
+                    if (loginForm.value.remember) {
+                        sessionStorage.setItem('agripulse_auth', 'true');
+                        sessionStorage.setItem('agripulse_user', JSON.stringify(demoUser));
                     }
                 } else {
-                    loginError.value = 'Invalid username or password. Try farmer / agripulse2026';
+                    loginError.value = 'Invalid username or password';
                 }
+                
                 isLoggingIn.value = false;
-            }, 800); // Simulate network delay
+            }, 800);
+        };
+
+        // Register handler
+        const handleRegister = () => {
+            isRegistering.value = true;
+            registerError.value = '';
+            registerSuccess.value = '';
+            
+            // Simulate API call
+            setTimeout(() => {
+                // Validation
+                if (registerForm.value.password.length < 6) {
+                    registerError.value = 'Password must be at least 6 characters';
+                    isRegistering.value = false;
+                    return;
+                }
+                
+                if (registerForm.value.password !== registerForm.value.confirmPassword) {
+                    registerError.value = 'Passwords do not match';
+                    isRegistering.value = false;
+                    return;
+                }
+                
+                if (!registerForm.value.agreeTerms) {
+                    registerError.value = 'You must agree to the Terms & Conditions';
+                    isRegistering.value = false;
+                    return;
+                }
+                
+                // Check if username already exists
+                if (users.value.some(u => u.username === registerForm.value.username)) {
+                    registerError.value = 'Username already exists';
+                    isRegistering.value = false;
+                    return;
+                }
+                
+                // Check if email already exists
+                if (users.value.some(u => u.email === registerForm.value.email)) {
+                    registerError.value = 'Email already registered';
+                    isRegistering.value = false;
+                    return;
+                }
+                
+                // Create new user
+                const newUser = {
+                    fullName: registerForm.value.fullName,
+                    username: registerForm.value.username,
+                    email: registerForm.value.email,
+                    password: registerForm.value.password, // In real app, this would be hashed
+                    registeredAt: new Date().toISOString()
+                };
+                
+                users.value.push(newUser);
+                
+                // Show success message
+                registerSuccess.value = 'Registration successful! You can now login.';
+                
+                // Clear form
+                registerForm.value = {
+                    fullName: '',
+                    username: '',
+                    email: '',
+                    password: '',
+                    confirmPassword: '',
+                    agreeTerms: false
+                };
+                
+                // Switch to login tab after 2 seconds
+                setTimeout(() => {
+                    authMode.value = 'login';
+                    registerSuccess.value = '';
+                }, 2000);
+                
+                isRegistering.value = false;
+            }, 800);
+        };
+
+        // Forgot password handler
+        const showForgotPassword = () => {
+            alert('Please contact support at support@agripulse.com for password recovery.');
+        };
+
+        // Show terms
+        const showTerms = () => {
+            alert('Terms & Conditions:\n\n1. Demo application for Hackarena 2026\n2. Data is not stored permanently\n3. Use responsibly');
         };
 
         // Logout handler
         const logout = () => {
             isAuthenticated.value = false;
-            currentUser.value = '';
+            currentUser.value = {};
             loginForm.value = { username: '', password: '', remember: false };
             sessionStorage.removeItem('agripulse_auth');
             sessionStorage.removeItem('agripulse_user');
@@ -58,6 +179,9 @@ const app = createApp({
             csvRows.value = [];
             currentSoil.value = null;
             result.value = null;
+            
+            // Reset to login tab
+            authMode.value = 'login';
         };
 
         // Check for saved session on mount
@@ -65,8 +189,12 @@ const app = createApp({
             const savedAuth = sessionStorage.getItem('agripulse_auth');
             const savedUser = sessionStorage.getItem('agripulse_user');
             if (savedAuth === 'true' && savedUser) {
-                isAuthenticated.value = true;
-                currentUser.value = savedUser;
+                try {
+                    currentUser.value = JSON.parse(savedUser);
+                    isAuthenticated.value = true;
+                } catch (e) {
+                    // Handle error
+                }
             }
         };
 
@@ -142,12 +270,20 @@ const app = createApp({
             isAuthenticated,
             currentUser,
             isLoggingIn,
+            isRegistering,
             loginError,
+            registerError,
+            registerSuccess,
+            authMode,
             loginForm,
+            registerForm,
             handleLogin,
+            handleRegister,
+            showForgotPassword,
+            showTerms,
             logout,
             
-            // Main app
+            // Main app view ...
             selectedCrop,
             csvRows,
             currentSoil,
