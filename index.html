@@ -13,7 +13,7 @@
 </head>
 <body>
     <div class="agri-container" id="app">
-        <!-- Login Form (shown when not authenticated) -->
+        <!-- Login/Register Form (shown when not authenticated) -->
         <div v-if="!isAuthenticated" class="login-wrapper">
             <div class="login-card glass-header" data-tilt data-tilt-max="5" data-tilt-glare data-tilt-max-glare="0.4">
                 <div class="login-header">
@@ -22,22 +22,33 @@
                     <p>AI-powered soil intelligence</p>
                 </div>
                 
-                <form @submit.prevent="handleLogin" class="login-form">
+                <!-- Tab switcher -->
+                <div class="auth-tabs">
+                    <button :class="['tab-btn', { active: authMode === 'login' }]" @click="authMode = 'login'">
+                        <i class="fas fa-sign-in-alt"></i> Login
+                    </button>
+                    <button :class="['tab-btn', { active: authMode === 'register' }]" @click="authMode = 'register'">
+                        <i class="fas fa-user-plus"></i> Register
+                    </button>
+                </div>
+                
+                <!-- Login Form -->
+                <form v-if="authMode === 'login'" @submit.prevent="handleLogin" class="login-form">
                     <div class="input-group">
-                        <label for="username"><i class="fas fa-user"></i> Username</label>
-                        <input type="text" id="username" v-model="loginForm.username" required placeholder="farmer@agripulse">
+                        <label for="login-username"><i class="fas fa-user"></i> Username</label>
+                        <input type="text" id="login-username" v-model="loginForm.username" required placeholder="farmer@agripulse">
                     </div>
                     
                     <div class="input-group">
-                        <label for="password"><i class="fas fa-lock"></i> Password</label>
-                        <input type="password" id="password" v-model="loginForm.password" required placeholder="••••••••">
+                        <label for="login-password"><i class="fas fa-lock"></i> Password</label>
+                        <input type="password" id="login-password" v-model="loginForm.password" required placeholder="••••••••">
                     </div>
                     
                     <div class="remember-forgot">
                         <label class="checkbox">
                             <input type="checkbox" v-model="loginForm.remember"> Remember me
                         </label>
-                        <a href="#" class="forgot-link">Forgot password?</a>
+                        <a href="#" class="forgot-link" @click.prevent="showForgotPassword">Forgot password?</a>
                     </div>
                     
                     <button type="submit" class="login-btn" :disabled="isLoggingIn">
@@ -45,8 +56,56 @@
                         {{ isLoggingIn ? 'Authenticating...' : 'Access Dashboard' }}
                     </button>
                     
-                    <div v-if="loginError" class="login-error">
+                    <div v-if="loginError" class="auth-error">
                         <i class="fas fa-exclamation-circle"></i> {{ loginError }}
+                    </div>
+                </form>
+                
+                <!-- Register Form -->
+                <form v-else @submit.prevent="handleRegister" class="login-form">
+                    <div class="input-group">
+                        <label for="reg-fullname"><i class="fas fa-id-card"></i> Full Name</label>
+                        <input type="text" id="reg-fullname" v-model="registerForm.fullName" required placeholder="John Farmer">
+                    </div>
+                    
+                    <div class="input-group">
+                        <label for="reg-username"><i class="fas fa-user"></i> Username</label>
+                        <input type="text" id="reg-username" v-model="registerForm.username" required placeholder="farmer123">
+                    </div>
+                    
+                    <div class="input-group">
+                        <label for="reg-email"><i class="fas fa-envelope"></i> Email</label>
+                        <input type="email" id="reg-email" v-model="registerForm.email" required placeholder="farmer@example.com">
+                    </div>
+                    
+                    <div class="input-group">
+                        <label for="reg-password"><i class="fas fa-lock"></i> Password</label>
+                        <input type="password" id="reg-password" v-model="registerForm.password" required placeholder="••••••••" minlength="6">
+                    </div>
+                    
+                    <div class="input-group">
+                        <label for="reg-confirm-password"><i class="fas fa-lock"></i> Confirm Password</label>
+                        <input type="password" id="reg-confirm-password" v-model="registerForm.confirmPassword" required placeholder="••••••••">
+                    </div>
+                    
+                    <div class="terms-checkbox">
+                        <label class="checkbox">
+                            <input type="checkbox" v-model="registerForm.agreeTerms" required>
+                            I agree to the <a href="#" @click.prevent="showTerms">Terms & Conditions</a>
+                        </label>
+                    </div>
+                    
+                    <button type="submit" class="login-btn" :disabled="isRegistering">
+                        <i class="fas" :class="isRegistering ? 'fa-spinner fa-spin' : 'fa-user-check'"></i>
+                        {{ isRegistering ? 'Creating Account...' : 'Create Account' }}
+                    </button>
+                    
+                    <div v-if="registerError" class="auth-error">
+                        <i class="fas fa-exclamation-circle"></i> {{ registerError }}
+                    </div>
+                    
+                    <div v-if="registerSuccess" class="auth-success">
+                        <i class="fas fa-check-circle"></i> {{ registerSuccess }}
                     </div>
                 </form>
                 
@@ -67,7 +126,7 @@
             <header class="glass-header" data-tilt data-tilt-max="3" data-tilt-glare data-tilt-max-glare="0.3">
                 <div class="logo"><i class="fas fa-seedling"></i> AgriPulse <span class="light">precision</span></div>
                 <div class="header-right">
-                    <span class="user-badge"><i class="fas fa-user-circle"></i> {{ currentUser }}</span>
+                    <span class="user-badge"><i class="fas fa-user-circle"></i> {{ currentUser.fullName || currentUser.username }}</span>
                     <button @click="logout" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Logout</button>
                 </div>
             </header>
