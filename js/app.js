@@ -1,26 +1,21 @@
-// js/app.js
-const { createApp, ref, computed, watch } = Vue;
+// Main Vue Application
+const { createApp, ref, watch } = Vue;
 
 const app = createApp({
     setup() {
-        // Authentication state
+        // ===== AUTH STATE =====
         const isAuthenticated = ref(false);
         const currentUser = ref({});
-        const isLoggingIn = ref(false);
-        const isRegistering = ref(false);
-        const loginError = ref('');
-        const registerError = ref('');
-        const registerSuccess = ref('');
-        
-        // Auth mode: 'login' or 'register'
         const authMode = ref('login');
         
+        // Login form
         const loginForm = ref({
             username: '',
             password: '',
             remember: false
         });
-
+        
+        // Register form
         const registerForm = ref({
             fullName: '',
             username: '',
@@ -29,65 +24,106 @@ const app = createApp({
             confirmPassword: '',
             agreeTerms: false
         });
+        
+        // UI states
+        const isLoggingIn = ref(false);
+        const isRegistering = ref(false);
+        const loginError = ref('');
+        const registerError = ref('');
+        const registerSuccess = ref('');
+        
+        // Store registered users
+        const users = ref([
+            {
+                fullName: 'Demo Farmer',
+                username: 'farmer',
+                email: 'farmer@agripulse.demo',
+                password: 'agripulse2026'
+            }
+        ]);
 
-        // Store registered users (in memory for demo)
-        const users = ref([]);
-
-        // Main app state
+        // ===== DASHBOARD STATE =====
         const selectedCrop = ref('');
         const csvRows = ref([]);
         const currentSoil = ref(null);
         const result = ref(null);
+        
+        // ===== COMPUTED =====
+        const passwordStrength = ref(0);
+        
+        // Watch password for strength
+        watch(() => registerForm.value.password, (newVal) => {
+            if (!newVal) {
+                passwordStrength.value = 0;
+                return;
+            }
+            
+            let strength = 0;
+            if (newVal.length >= 6) strength += 25;
+            if (newVal.length >= 8) strength += 15;
+            if (/[A-Z]/.test(newVal)) strength += 15;
+            if (/[0-9]/.test(newVal)) strength += 15;
+            if (/[^A-Za-z0-9]/.test(newVal)) strength += 15;
+            if (/[a-z]/.test(newVal) && /[A-Z]/.test(newVal)) strength += 15;
+            
+            passwordStrength.value = Math.min(100, strength);
+        });
 
-        // Login handler
+        // Health color class
+        const healthColorClass = ref('');
+        
+        watch(() => result.value, (newVal) => {
+            if (!newVal) {
+                healthColorClass.value = '';
+                return;
+            }
+            const health = newVal.health_metrics.overall_health;
+            if (health === 'Optimal') healthColorClass.value = 'green';
+            else if (health === 'Deficient') healthColorClass.value = 'yellow';
+            else healthColorClass.value = 'red';
+        });
+
+        // ===== AUTH METHODS =====
+        const switchMode = (mode) => {
+            authMode.value = mode;
+            loginError.value = '';
+            registerError.value = '';
+            registerSuccess.value = '';
+        };
+        
         const handleLogin = () => {
             isLoggingIn.value = true;
             loginError.value = '';
             
-            // Simulate API call with setTimeout
             setTimeout(() => {
-                // Check against registered users OR demo credentials
-                const user = users.value.find(u => u.username === loginForm.value.username);
+                const user = users.value.find(
+                    u => u.username === loginForm.value.username && 
+                         u.password === loginForm.value.password
+                );
                 
-                if (user && user.password === loginForm.value.password) {
-                    // Registered user found
-                    isAuthenticated.value = true;
+                if (user) {
                     currentUser.value = user;
+                    isAuthenticated.value = true;
                     
                     if (loginForm.value.remember) {
-                        sessionStorage.setItem('agripulse_auth', 'true');
                         sessionStorage.setItem('agripulse_user', JSON.stringify(user));
                     }
-                } 
-                // Demo credentials
-                else if (loginForm.value.username === 'farmer' && loginForm.value.password === 'agripulse2026') {
-                    const demoUser = {
-                        fullName: 'Demo Farmer',
-                        username: 'farmer',
-                        email: 'farmer@agripulse.demo'
-                    };
-                    isAuthenticated.value = true;
-                    currentUser.value = demoUser;
                     
-                    if (loginForm.value.remember) {
-                        sessionStorage.setItem('agripulse_auth', 'true');
-                        sessionStorage.setItem('agripulse_user', JSON.stringify(demoUser));
-                    }
+                    // Reset login form
+                    loginForm.value = { username: '', password: '', remember: false };
                 } else {
-                    loginError.value = 'Invalid username or password';
+                    loginError.value = 'Invalid username or password. Try: farmer / agripulse2026';
                 }
                 
                 isLoggingIn.value = false;
             }, 800);
         };
-
-        // Register handler
+        
         const handleRegister = () => {
             isRegistering.value = true;
             registerError.value = '';
             registerSuccess.value = '';
             
-            // Simulate API call
             setTimeout(() => {
                 // Validation
                 if (registerForm.value.password.length < 6) {
@@ -108,14 +144,14 @@ const app = createApp({
                     return;
                 }
                 
-                // Check if username already exists
+                // Check if username exists
                 if (users.value.some(u => u.username === registerForm.value.username)) {
-                    registerError.value = 'Username already exists';
+                    registerError.value = 'Username already taken';
                     isRegistering.value = false;
                     return;
                 }
                 
-                // Check if email already exists
+                // Check if email exists
                 if (users.value.some(u => u.email === registerForm.value.email)) {
                     registerError.value = 'Email already registered';
                     isRegistering.value = false;
@@ -127,13 +163,10 @@ const app = createApp({
                     fullName: registerForm.value.fullName,
                     username: registerForm.value.username,
                     email: registerForm.value.email,
-                    password: registerForm.value.password, // In real app, this would be hashed
-                    registeredAt: new Date().toISOString()
+                    password: registerForm.value.password
                 };
                 
                 users.value.push(newUser);
-                
-                // Show success message
                 registerSuccess.value = 'Registration successful! You can now login.';
                 
                 // Clear form
@@ -146,7 +179,7 @@ const app = createApp({
                     agreeTerms: false
                 };
                 
-                // Switch to login tab after 2 seconds
+                // Switch to login after 2 seconds
                 setTimeout(() => {
                     authMode.value = 'login';
                     registerSuccess.value = '';
@@ -155,87 +188,77 @@ const app = createApp({
                 isRegistering.value = false;
             }, 800);
         };
-
-        // Forgot password handler
-        const showForgotPassword = () => {
-            alert('Please contact support at support@agripulse.com for password recovery.');
-        };
-
-        // Show terms
-        const showTerms = () => {
-            alert('Terms & Conditions:\n\n1. Demo application for Hackarena 2026\n2. Data is not stored permanently\n3. Use responsibly');
-        };
-
-        // Logout handler
+        
         const logout = () => {
             isAuthenticated.value = false;
             currentUser.value = {};
-            loginForm.value = { username: '', password: '', remember: false };
-            sessionStorage.removeItem('agripulse_auth');
             sessionStorage.removeItem('agripulse_user');
             
-            // Reset main app state
+            // Reset dashboard state
             selectedCrop.value = '';
             csvRows.value = [];
             currentSoil.value = null;
             result.value = null;
-            
-            // Reset to login tab
-            authMode.value = 'login';
+        };
+        
+        const showForgotPassword = () => {
+            alert('🔐 Password Recovery\n\nDemo credentials: farmer / agripulse2026');
+        };
+        
+        const showTerms = () => {
+            alert('📋 Terms & Conditions\n\nDemo application for Hackarena 2026');
         };
 
-        // Check for saved session on mount
-        const checkSavedSession = () => {
-            const savedAuth = sessionStorage.getItem('agripulse_auth');
-            const savedUser = sessionStorage.getItem('agripulse_user');
-            if (savedAuth === 'true' && savedUser) {
-                try {
-                    currentUser.value = JSON.parse(savedUser);
-                    isAuthenticated.value = true;
-                } catch (e) {
-                    // Handle error
-                }
-            }
-        };
-
-        // Call checkSavedSession immediately
-        checkSavedSession();
-
-        // load sample soil by id
+        // ===== DASHBOARD METHODS =====
         const loadSampleSoil = (id) => {
-            let sampleData;
             if (id === 'SOIL_001') {
-                sampleData = { soil_id: 'SOIL_001', nitrogen: 25, phosphorus: 20, potassium: 180, ph_level: 6.5 };
+                currentSoil.value = { 
+                    soil_id: 'SOIL_001', 
+                    nitrogen: 25, 
+                    phosphorus: 20, 
+                    potassium: 180, 
+                    ph_level: 6.5 
+                };
             } else {
-                sampleData = { soil_id: 'SOIL_002', nitrogen: 12, phosphorus: 18, potassium: 160, ph_level: 6.2 };
+                currentSoil.value = { 
+                    soil_id: 'SOIL_002', 
+                    nitrogen: 12, 
+                    phosphorus: 18, 
+                    potassium: 160, 
+                    ph_level: 6.2 
+                };
             }
-            currentSoil.value = sampleData;
             if (selectedCrop.value) runEvaluation();
         };
 
-        // file upload handler
         const handleFileUpload = (event) => {
             const file = event.target.files[0];
             if (!file) return;
-            UiController.readCSVFile(file, (err, rows) => {
-                if (err) {
-                    alert('csv error: ' + err.message);
-                    return;
+            
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const rows = window.CsvParser.parse(e.target.result);
+                    csvRows.value = rows;
+                    if (rows.length) {
+                        currentSoil.value = rows[0];
+                    }
+                    if (selectedCrop.value) runEvaluation();
+                } catch (err) {
+                    alert('CSV Error: ' + err.message);
                 }
-                csvRows.value = rows;
-                if (rows.length) {
-                    currentSoil.value = rows[0];
-                }
-                if (selectedCrop.value) runEvaluation();
-            });
+            };
+            reader.readAsText(file);
         };
 
-        // run logic engine + AI
         const runEvaluation = () => {
             if (!selectedCrop.value || !currentSoil.value) return;
-            const logicRes = LogicEngine.evaluate(currentSoil.value, selectedCrop.value);
+            
+            const logicRes = window.LogicEngine.evaluate(currentSoil.value, selectedCrop.value);
             if (!logicRes) return;
-            const aiText = AiExplanation.generate(currentSoil.value, selectedCrop.value, logicRes);
+            
+            const aiText = window.AiExplanation.generate(currentSoil.value, selectedCrop.value, logicRes);
+            
             result.value = {
                 soil_id: currentSoil.value.soil_id,
                 target_crop: selectedCrop.value,
@@ -245,65 +268,71 @@ const app = createApp({
             };
         };
 
-        // watch for changes
-        watch([selectedCrop, currentSoil], () => {
-            if (selectedCrop.value && currentSoil.value) runEvaluation();
-        });
-
-        // health color class
-        const healthColorClass = computed(() => {
-            if (!result.value) return '';
-            const health = result.value.health_metrics.overall_health;
-            if (health === 'Optimal') return 'green';
-            if (health === 'Deficient') return 'yellow';
-            return 'red';
-        });
-
         const healthClass = (health) => {
             if (health === 'Optimal') return 'optimal';
             if (health === 'Deficient') return 'deficient';
             return 'critical';
         };
 
+        // Watch for changes
+        watch([selectedCrop, currentSoil], () => {
+            if (selectedCrop.value && currentSoil.value) runEvaluation();
+        });
+
+        // Check for saved session
+        const savedUser = sessionStorage.getItem('agripulse_user');
+        if (savedUser) {
+            try {
+                currentUser.value = JSON.parse(savedUser);
+                isAuthenticated.value = true;
+            } catch (e) {
+                // Ignore parse error
+            }
+        }
+
         return {
             // Auth
             isAuthenticated,
             currentUser,
+            authMode,
+            loginForm,
+            registerForm,
             isLoggingIn,
             isRegistering,
             loginError,
             registerError,
             registerSuccess,
-            authMode,
-            loginForm,
-            registerForm,
+            passwordStrength,
+            switchMode,
             handleLogin,
             handleRegister,
+            logout,
             showForgotPassword,
             showTerms,
-            logout,
             
-            // Main app view ...
+            // Dashboard
             selectedCrop,
-            csvRows,
             currentSoil,
             result,
+            healthColorClass,
             loadSampleSoil,
             handleFileUpload,
-            healthColorClass,
             healthClass
         };
     }
-}).mount('#app');
+});
 
-// vanilla tilt for 3d cards (exec after dom ready)
+app.mount('#app');
+
+// Initialize Vanilla Tilt
 document.addEventListener('DOMContentLoaded', () => {
     if (typeof VanillaTilt !== 'undefined') {
-        VanillaTilt.init(document.querySelectorAll('[data-tilt]'), {
-            max: 4,
+        VanillaTilt.init(document.querySelector('[data-tilt]'), {
+            max: 3,
             speed: 400,
             glare: true,
-            'max-glare': 0.25,
+            'max-glare': 0.2,
+            scale: 1.02
         });
     }
 });

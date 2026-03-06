@@ -2,144 +2,228 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
     <title>AgriPulse · precision agriculture</title>
-    <!-- 3D tilt & dark theme base -->
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome 6 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Custom CSS -->
     <link rel="stylesheet" href="css/styles.css">
-    <!-- google font for clean typography -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz@14..32&display=swap" rel="stylesheet">
-    <!-- font awesome icons (free) -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <style>
-        /* Fallback styles in case CSS doesn't load */
-        body { margin: 0; padding: 20px; background: #0a140e; color: #eef4e6; font-family: 'Inter', sans-serif; }
-    </style>
 </head>
 <body>
-    <div class="agri-container" id="app">
-        <!-- Login/Register Form (shown when not authenticated) -->
-        <div v-if="!isAuthenticated" class="login-wrapper">
-            <div class="login-card glass-header" data-tilt data-tilt-max="5" data-tilt-glare data-tilt-max-glare="0.4">
-                <div class="login-header">
-                    <i class="fas fa-seedling fa-3x"></i>
-                    <h1>AgriPulse <span>precision</span></h1>
-                    <p>AI-powered soil intelligence</p>
+    <div id="app">
+        <!-- Animated background elements -->
+        <div class="floating-shape shape-1"></div>
+        <div class="floating-shape shape-2"></div>
+        <div class="floating-shape shape-3"></div>
+        
+        <!-- Show Login/Register when not authenticated -->
+        <div v-if="!isAuthenticated" class="auth-wrapper">
+            <div class="auth-card" data-tilt data-tilt-max="3" data-tilt-glare data-tilt-max-glare="0.2">
+                <!-- Header -->
+                <div class="auth-header">
+                    <i class="fas fa-seedling"></i>
+                    <h1>AgriPulse <span>precision agriculture</span></h1>
+                    <p>AI-powered soil intelligence for better yields</p>
                 </div>
                 
-                <!-- Tab switcher -->
+                <!-- Tab Switcher -->
                 <div class="auth-tabs">
-                    <button :class="['tab-btn', { active: authMode === 'login' }]" @click="authMode = 'login'">
-                        <i class="fas fa-sign-in-alt"></i> Login
+                    <button :class="['tab-btn', { active: authMode === 'login' }]" @click="switchMode('login')">
+                        <i class="fas fa-sign-in-alt"></i>
+                        <span>Login</span>
                     </button>
-                    <button :class="['tab-btn', { active: authMode === 'register' }]" @click="authMode = 'register'">
-                        <i class="fas fa-user-plus"></i> Register
+                    <button :class="['tab-btn', { active: authMode === 'register' }]" @click="switchMode('register')">
+                        <i class="fas fa-user-plus"></i>
+                        <span>Register</span>
                     </button>
                 </div>
                 
                 <!-- Login Form -->
-                <form v-if="authMode === 'login'" @submit.prevent="handleLogin" class="login-form">
+                <form v-if="authMode === 'login'" @submit.prevent="handleLogin" class="auth-form">
                     <div class="input-group">
-                        <label for="login-username"><i class="fas fa-user"></i> Username</label>
-                        <input type="text" id="login-username" v-model="loginForm.username" required placeholder="farmer@agripulse">
-                    </div>
-                    
-                    <div class="input-group">
-                        <label for="login-password"><i class="fas fa-lock"></i> Password</label>
-                        <input type="password" id="login-password" v-model="loginForm.password" required placeholder="••••••••">
-                    </div>
-                    
-                    <div class="remember-forgot">
-                        <label class="checkbox">
-                            <input type="checkbox" v-model="loginForm.remember"> Remember me
+                        <label>
+                            <i class="fas fa-user"></i>
+                            Username
                         </label>
-                        <a href="#" class="forgot-link" @click.prevent="showForgotPassword">Forgot password?</a>
+                        <input 
+                            type="text" 
+                            v-model="loginForm.username" 
+                            placeholder="farmer@agripulse" 
+                            required
+                        >
                     </div>
                     
-                    <button type="submit" class="login-btn" :disabled="isLoggingIn">
+                    <div class="input-group">
+                        <label>
+                            <i class="fas fa-lock"></i>
+                            Password
+                        </label>
+                        <input 
+                            type="password" 
+                            v-model="loginForm.password" 
+                            placeholder="••••••••" 
+                            required
+                        >
+                    </div>
+                    
+                    <div class="form-row">
+                        <label class="checkbox-label">
+                            <input type="checkbox" v-model="loginForm.remember">
+                            <span class="checkmark"></span>
+                            Remember me
+                        </label>
+                        <a href="#" class="forgot-link" @click.prevent="showForgotPassword">
+                            Forgot password?
+                        </a>
+                    </div>
+                    
+                    <button type="submit" class="submit-btn" :disabled="isLoggingIn">
                         <i class="fas" :class="isLoggingIn ? 'fa-spinner fa-spin' : 'fa-sign-in-alt'"></i>
                         {{ isLoggingIn ? 'Authenticating...' : 'Access Dashboard' }}
                     </button>
                     
-                    <div v-if="loginError" class="auth-error">
-                        <i class="fas fa-exclamation-circle"></i> {{ loginError }}
+                    <div v-if="loginError" class="message error">
+                        <i class="fas fa-exclamation-circle"></i>
+                        {{ loginError }}
                     </div>
                 </form>
                 
                 <!-- Register Form -->
-                <form v-else @submit.prevent="handleRegister" class="login-form">
+                <form v-else @submit.prevent="handleRegister" class="auth-form">
                     <div class="input-group">
-                        <label for="reg-fullname"><i class="fas fa-id-card"></i> Full Name</label>
-                        <input type="text" id="reg-fullname" v-model="registerForm.fullName" required placeholder="John Farmer">
+                        <label>
+                            <i class="fas fa-id-card"></i>
+                            Full Name
+                        </label>
+                        <input 
+                            type="text" 
+                            v-model="registerForm.fullName" 
+                            placeholder="John Farmer" 
+                            required
+                        >
                     </div>
                     
                     <div class="input-group">
-                        <label for="reg-username"><i class="fas fa-user"></i> Username</label>
-                        <input type="text" id="reg-username" v-model="registerForm.username" required placeholder="farmer123">
+                        <label>
+                            <i class="fas fa-user"></i>
+                            Username
+                        </label>
+                        <input 
+                            type="text" 
+                            v-model="registerForm.username" 
+                            placeholder="farmer123" 
+                            required
+                        >
                     </div>
                     
                     <div class="input-group">
-                        <label for="reg-email"><i class="fas fa-envelope"></i> Email</label>
-                        <input type="email" id="reg-email" v-model="registerForm.email" required placeholder="farmer@example.com">
+                        <label>
+                            <i class="fas fa-envelope"></i>
+                            Email
+                        </label>
+                        <input 
+                            type="email" 
+                            v-model="registerForm.email" 
+                            placeholder="farmer@example.com" 
+                            required
+                        >
                     </div>
                     
                     <div class="input-group">
-                        <label for="reg-password"><i class="fas fa-lock"></i> Password</label>
-                        <input type="password" id="reg-password" v-model="registerForm.password" required placeholder="••••••••" minlength="6">
+                        <label>
+                            <i class="fas fa-lock"></i>
+                            Password
+                        </label>
+                        <input 
+                            type="password" 
+                            v-model="registerForm.password" 
+                            placeholder="••••••••" 
+                            minlength="6"
+                            required
+                        >
+                        <div class="password-strength" v-if="registerForm.password">
+                            <div class="strength-bar" :style="{ width: passwordStrength + '%' }"></div>
+                        </div>
                     </div>
                     
                     <div class="input-group">
-                        <label for="reg-confirm-password"><i class="fas fa-lock"></i> Confirm Password</label>
-                        <input type="password" id="reg-confirm-password" v-model="registerForm.confirmPassword" required placeholder="••••••••">
+                        <label>
+                            <i class="fas fa-lock"></i>
+                            Confirm Password
+                        </label>
+                        <input 
+                            type="password" 
+                            v-model="registerForm.confirmPassword" 
+                            placeholder="••••••••" 
+                            required
+                        >
                     </div>
                     
                     <div class="terms-checkbox">
-                        <label class="checkbox">
-                            <input type="checkbox" v-model="registerForm.agreeTerms" required>
+                        <label class="checkbox-label">
+                            <input type="checkbox" v-model="registerForm.agreeTerms">
+                            <span class="checkmark"></span>
                             I agree to the <a href="#" @click.prevent="showTerms">Terms & Conditions</a>
                         </label>
                     </div>
                     
-                    <button type="submit" class="login-btn" :disabled="isRegistering">
+                    <button type="submit" class="submit-btn" :disabled="isRegistering">
                         <i class="fas" :class="isRegistering ? 'fa-spinner fa-spin' : 'fa-user-check'"></i>
                         {{ isRegistering ? 'Creating Account...' : 'Create Account' }}
                     </button>
                     
-                    <div v-if="registerError" class="auth-error">
-                        <i class="fas fa-exclamation-circle"></i> {{ registerError }}
+                    <div v-if="registerError" class="message error">
+                        <i class="fas fa-exclamation-circle"></i>
+                        {{ registerError }}
                     </div>
                     
-                    <div v-if="registerSuccess" class="auth-success">
-                        <i class="fas fa-check-circle"></i> {{ registerSuccess }}
+                    <div v-if="registerSuccess" class="message success">
+                        <i class="fas fa-check-circle"></i>
+                        {{ registerSuccess }}
                     </div>
                 </form>
                 
-                <div class="login-footer">
+                <!-- Footer -->
+                <div class="auth-footer">
                     <p>Demo credentials: <strong>farmer / agripulse2026</strong></p>
-                    <p class="hint"><i class="fas fa-flask"></i> Hackarena 2026 · Sustainable Tech</p>
+                    <p class="hint">
+                        <i class="fas fa-flask"></i>
+                        Hackarena 2026 · Sustainable Tech
+                    </p>
                 </div>
             </div>
-            
-            <!-- 3D floating elements for background effect -->
-            <div class="floating-shape shape-1"></div>
-            <div class="floating-shape shape-2"></div>
         </div>
 
         <!-- Main Dashboard (shown after login) -->
-        <template v-else>
-            <!-- header with 3d glass tilt effect and logout -->
-            <header class="glass-header" data-tilt data-tilt-max="3" data-tilt-glare data-tilt-max-glare="0.3">
-                <div class="logo"><i class="fas fa-seedling"></i> AgriPulse <span class="light">precision</span></div>
+        <div v-else class="dashboard-wrapper">
+            <!-- Header -->
+            <header class="glass-header">
+                <div class="logo">
+                    <i class="fas fa-seedling"></i> 
+                    AgriPulse <span class="light">precision</span>
+                </div>
                 <div class="header-right">
-                    <span class="user-badge"><i class="fas fa-user-circle"></i> {{ currentUser.fullName || currentUser.username }}</span>
-                    <button @click="logout" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Logout</button>
+                    <span class="user-badge">
+                        <i class="fas fa-user-circle"></i> 
+                        {{ currentUser.fullName || currentUser.username }}
+                    </span>
+                    <button @click="logout" class="logout-btn">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </button>
                 </div>
             </header>
 
-            <!-- main dashboard grid -->
+            <!-- Dashboard Grid -->
             <div class="dashboard-grid">
-                <!-- left panel: input & csv upload -->
-                <div class="card left-panel tilt-card" data-tilt data-tilt-max="2.5" data-tilt-glare>
+                <!-- Left Panel: Input & CSV Upload -->
+                <div class="card left-panel">
                     <h2><i class="fas fa-upload"></i> soil data & crop</h2>
+                    
                     <div class="input-group">
                         <label for="cropSelect"><i class="fas fa-tractor"></i> target crop</label>
                         <select id="cropSelect" class="crop-select" v-model="selectedCrop">
@@ -154,19 +238,27 @@
                     <div class="input-group file-upload">
                         <label for="csvFile"><i class="fas fa-file-csv"></i> upload sample_soil_data.csv</label>
                         <input type="file" id="csvFile" accept=".csv" @change="handleFileUpload">
-                        <div class="file-hint">expects headers: soil_id,nitrogen,phosphorus,potassium,ph_level</div>
+                        <div class="file-hint">headers: soil_id,nitrogen,phosphorus,potassium,ph_level</div>
                     </div>
 
-                    <!-- quick sample selector -->
+                    <!-- Sample Selector -->
                     <div class="sample-panel">
                         <p><i class="fas fa-flask"></i> load public sample</p>
-                        <button class="sample-btn" @click="loadSampleSoil('SOIL_001')">SOIL_001 (tomato)</button>
-                        <button class="sample-btn" @click="loadSampleSoil('SOIL_002')">SOIL_002 (wheat)</button>
+                        <div class="sample-buttons">
+                            <button class="sample-btn" @click="loadSampleSoil('SOIL_001')">
+                                SOIL_001 (tomato)
+                            </button>
+                            <button class="sample-btn" @click="loadSampleSoil('SOIL_002')">
+                                SOIL_002 (wheat)
+                            </button>
+                        </div>
                     </div>
 
-                    <!-- active soil summary -->
+                    <!-- Active Soil Summary -->
                     <div v-if="currentSoil" class="active-soil">
-                        <span class="badge-soil"><i class="fas fa-map-pin"></i> {{ currentSoil.soil_id }}</span>
+                        <span class="badge-soil">
+                            <i class="fas fa-map-pin"></i> {{ currentSoil.soil_id }}
+                        </span>
                         <div class="nutri-mini">
                             <span>N: {{ currentSoil.nitrogen }}</span>
                             <span>P: {{ currentSoil.phosphorus }}</span>
@@ -176,9 +268,10 @@
                     </div>
                 </div>
 
-                <!-- center panel: suitability score & health metrics -->
-                <div class="card center-panel tilt-card" data-tilt data-tilt-max="2" data-tilt-glare>
+                <!-- Center Panel: Suitability Score -->
+                <div class="card center-panel">
                     <h2><i class="fas fa-chart-line"></i> suitability dashboard</h2>
+                    
                     <div v-if="result" :class="['score-ring', healthColorClass]">
                         <div class="score-value">{{ result.recommendation.suitability_score }}%</div>
                         <div class="score-label">suitability</div>
@@ -188,11 +281,11 @@
                         <p>upload .csv & select crop</p>
                     </div>
 
-                    <!-- health metrics block -->
+                    <!-- Health Metrics -->
                     <div v-if="result" class="metrics-deep">
                         <div class="metric-item">
                             <span class="label">overall health</span>
-                            <span :class="['pill', healthClass( result.health_metrics.overall_health )]">
+                            <span :class="['pill', healthClass(result.health_metrics.overall_health)]">
                                 {{ result.health_metrics.overall_health }}
                             </span>
                         </div>
@@ -200,26 +293,32 @@
                             <span class="label">critical deficiencies</span>
                             <div class="deficiency-list">
                                 <span v-for="(def, idx) in result.health_metrics.critical_deficiencies" 
-                                      :key="idx" class="deficiency-pill">{{ def }}</span>
+                                      :key="idx" class="deficiency-pill">
+                                    {{ def }}
+                                </span>
                                 <span v-if="!result.health_metrics.critical_deficiencies.length">— none —</span>
                             </div>
                         </div>
                     </div>
                     
-                    <!-- JSON schema display -->
+                    <!-- JSON Schema -->
                     <div class="schema-drop">
                         <details>
-                            <summary><i class="fas fa-code"></i> mandatory JSON schema (visible)</summary>
+                            <summary><i class="fas fa-code"></i> mandatory JSON schema</summary>
                             <pre class="json-pre">{{ result ? JSON.stringify(result, null, 2) : '{\n  "soil_id": "SOIL_...",\n  "target_crop": "...",\n  "health_metrics": { ... },\n  "recommendation": { ... },\n  "ai_explanation": "..."\n}' }}</pre>
                         </details>
                     </div>
                 </div>
 
-                <!-- right panel: recommendation & AI explanation -->
-                <div class="card right-panel tilt-card" data-tilt data-tilt-max="2.5" data-tilt-glare>
+                <!-- Right Panel: AI Insights -->
+                <div class="card right-panel">
                     <h2><i class="fas fa-flask"></i> fertilizer & AI insight</h2>
+                    
                     <div v-if="result" class="rec-box">
-                        <p class="fertilizer-plan"><i class="fas fa-spray-can"></i> {{ result.recommendation.fertilizer_plan }}</p>
+                        <p class="fertilizer-plan">
+                            <i class="fas fa-spray-can"></i> 
+                            {{ result.recommendation.fertilizer_plan }}
+                        </p>
                         <div class="ai-explanation-block">
                             <i class="fas fa-robot ai-icon"></i>
                             <p class="ai-text">{{ result.ai_explanation }}</p>
@@ -232,19 +331,22 @@
                 </div>
             </div>
 
-            <!-- footer -->
+            <!-- Footer -->
             <footer class="glass-footer">
-                <span><i class="fab fa-github"></i> modular code: logicEngine / csvParser / aiExplanation</span>
+                <span>
+                    <i class="fab fa-github"></i> 
+                    logicEngine / csvParser / aiExplanation
+                </span>
                 <span>⚡ HACKARENA 2026 – sustainable tech</span>
             </footer>
-        </template>
+        </div>
     </div>
 
-    <!-- 3d tilt library -->
+    <!-- Libraries -->
     <script src="https://cdn.jsdelivr.net/npm/vanilla-tilt@1.8.0/dist/vanilla-tilt.min.js"></script>
-    <!-- vue 3 cdn -->
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
-    <!-- our modular js files -->
+    
+    <!-- Custom JS Files (order matters) -->
     <script src="js/csvParser.js"></script>
     <script src="js/logicEngine.js"></script>
     <script src="js/aiExplanation.js"></script>

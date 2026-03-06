@@ -1,20 +1,13 @@
-# README.md
+# AgriPulse Precision Agriculture
 
-```markdown
-# AgriPulse – Precision Agriculture (AI‑Powered)
+AI-powered soil intelligence for better crop yields.
 
-AgriPulse is a 4‑hour Hackarena submission for Sustainable Tech / Applied AI track.  
-It parses soil CSV data, applies a strict rule‑based scoring engine (NPK + pH), and generates farmer‑friendly LLM explanations.  
-**Live demo** (if hosted) → [your URL]
+## Features
+- 🌱 **Soil Analysis**: Upload CSV with NPK and pH levels
+- 🎯 **Crop Selection**: TOMATO, WHEAT, RICE, MAIZE
+- 📊 **Suitability Score**: 0-100% based on hard-coded rules
+- 🤖 **AI Explanations**: Farmer-friendly insights
+- 🔐 **User Authentication**: Login/Register system
+- 🎨 **Beautiful UI**: Dark theme with 3D effects
 
-## ✨ Features
-
-- **Dark UI with 3D tilt cards** (vanilla-tilt + glassmorphism)
-- **CSV upload** (headers: `soil_id,nitrogen,phosphorus,potassium,ph_level`)
-- **Hard‑coded logic** following the contract (pH penalty, universal thresholds, critical crop penalty)
-- **Colour‑coded dashboard** (green / yellow / red)
-- **Mandatory JSON schema** visible in UI
-- **Simulated LLM explanations** (rule‑based but agronomically sound)
-
-## 📁 File Structure (as required)
-```
+## Demo Credentials
